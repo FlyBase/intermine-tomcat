@@ -45,16 +45,13 @@ RUN set -x \
     && rm bin/*.bat \
     && rm tomcat.tar.gz*
 
+COPY entrypoint.sh /
+RUN chmod +x /entrypoint.sh
 RUN chown -R intermine:intermine $CATALINA_HOME
 
 USER intermine
 
 COPY tomcat-users.xml $CATALINA_HOME/conf/tomcat-users.xml
-
-RUN sed -ri -e 's|TOMCAT_MANAGER_USER|${TOMCAT_MANAGER_USER}|g' $CATALINA_HOME/conf/tomcat-users.xml
-RUN sed -ri -e 's|TOMCAT_MANAGER_PASSWORD|${TOMCAT_MANAGER_PASSWORD}|g' $CATALINA_HOME/conf/tomcat-users.xml
-RUN sed -ri -e 's|<Context>|<Context sessionCookiePath="/" useHttpOnly="false" clearReferencesStopTimerThreads="true">|g' $CATALINA_HOME/conf/context.xml
-RUN sed -ri -e 's|<Connector (.*)$|<Connector URIEncoding="UTF-8" \1|g' $CATALINA_HOME/conf/server.xml
 
 ENV ANT_OPTS="-server -XX:MaxPermSize=256M -Xmx1700m -XX:+UseParallelGC -Xms1700m -XX:SoftRefLRUPolicyMSPerMB=1 -XX:MaxHeapFreeRatio=99"
 ENV JAVA_OPTS="$JAVA_OPTS -Dorg.apache.el.parser.SKIP_IDENTIFIER_CHECK=true"
@@ -64,4 +61,5 @@ EXPOSE 8080
 
 VOLUME /tomcat 
 
-CMD ["catalina.sh","run"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["catalina.sh", "run"]
